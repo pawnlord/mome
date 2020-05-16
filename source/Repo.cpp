@@ -4,6 +4,8 @@
 #include <fstream>
 #include <stdlib.h>
 
+#include <ctime>
+
 std::string get_current_dir() {
    char* buff = (char*) malloc(FILENAME_MAX); //create string buffer to hold path
    GetCurrentDir(buff, FILENAME_MAX);
@@ -22,12 +24,30 @@ Repo::Repo(bool create){
             this->r.date_created = ""; 
         } else {
             this->r.active = true;
+            fs.close();
+            std::ifstream ifs;
+            ifs.open(".mome");
+            std::string current_line;    
             this->r.date_created = "no_date_yet";
+        
+            while(getline(ifs, current_line)){
+                for(int i = 0; current_line[i] != 0; i++){
+                    std::cout << current_line.substr(0,i) << std::endl;
+                    if(current_line[i] == '=' && current_line.substr(0,i) == "date_created"){
+                        this->r.date_created = std::string(current_line.c_str()+i+1);
+                        break;
+                    }
+                }
+            }
+            std::cout << this->r.date_created;
         }
     } else {
         std::ofstream file;
         file.open(".mome");
-        file << "default_mome_file.\n";
+        
+        std::time_t result = std::time(NULL);
+        file << "date_created=" << std::asctime(std::localtime(&result));
+        
         file.close();
     }
 }
