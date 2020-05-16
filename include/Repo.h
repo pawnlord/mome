@@ -15,6 +15,7 @@
 typedef struct {
     bool active;
     std::string date_created;
+    std::string directory;
 
 } repoInfo;
 
