@@ -23,7 +23,7 @@ command getCommand(char** args){
         return NON_REPO_RELATED;
     } else if(strcmp(args[1], "version") == 0 || strcmp(args[1], "v") == 0) {
         // give version info
-        std::cout << "Mome, by pawnlord (github), version 0.0.1" << std::endl;
+        std::cout << "Mome, by pawnlord (github), version 0.1.0" << std::endl;
      
         return NON_REPO_RELATED;
     } else if(strcmp(args[1], "info") == 0 || strcmp(args[1], "i") == 0) {
