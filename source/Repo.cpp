@@ -5,8 +5,20 @@
 #include <stdlib.h>
 #include <io.h>
 #include <sys/stat.h>
+#include <string>
+#include <string.h>
+#include <string>
 
 #include <ctime>
+
+#include <sstream>
+
+/* MinGW dumb, need to declare this myself */
+std::string to_string(int i){
+    std::stringstream ss;
+    ss<<i;
+    return ss.str();
+}
 
 bool checkDir( std::string name )
 {
@@ -38,7 +50,7 @@ std::string recursiveCheckDir(std::string name, std::string path ){
     }
     for(std::string currentPath = path; currentPath != ""; currentPath = getLastDir(currentPath)){
         if(checkDir(currentPath+"/"+name)){
-            if(strchr(currentPath, '\\')) {
+            if(strchr(currentPath.c_str(), '\\')) {
                 return  currentPath+"\\"+name;
             } else {
                 return currentPath+"/"+name;
@@ -69,13 +81,16 @@ Repo::Repo(bool create){
             std::ifstream ifs;
             ifs.open((repoDir + "/.mome").c_str());
             std::string current_line;    
-            this->r.directory = repoDir;
+            this->r.directory = repoDir.substr(0, repoDir.length() - std::string("/.mome").length());
             this->r.date_created = "no_date_yet";
             
             while(getline(ifs, current_line)){
                 for(int i = 0; current_line[i] != 0; i++){
                     if(current_line[i] == '=' && current_line.substr(0,i) == "date_created"){
                         this->r.date_created = std::string(current_line.c_str()+i+1);
+                        break;
+                    } else if(current_line[i] == '=' && current_line.substr(0,i) == "commit_number"){
+                        this->r.commit_number = std::string(current_line.c_str()+i+1);
                         break;
                     }
                 }
@@ -91,7 +106,8 @@ Repo::Repo(bool create){
         file.open(".mome/.mome");
         
         std::time_t result = std::time(NULL);
-        file << "date_created=" << std::asctime(std::localtime(&result));
+        file << "date_created=" << std::asctime(std::localtime(&result)) << std::endl;
+        file << "commit_number=0"<< std::endl;
         
         file.close();
     }
@@ -110,7 +126,40 @@ std::string Repo::formatInfo(std::string format){
     if(!this->r.active) {
         formatted = "No active repo";
     } else {
-        formatted = "Active Repo found (" + this->r.directory + "), created " + this->r.date_created; 
+        formatted = "Active Repo found (" + this->r.directory + ").\nCreated " + this->r.date_created + 
+                    ", with " + this->r.commit_number + " commits"; 
     }
     return formatted;
+}
+void Repo::addCommit(char** args){
+    std::ifstream ifs;
+    ifs.open((this->r.directory+ "/.mome").c_str());
+    std::string current_line;    
+    
+    int new_commit_number = atoi(this->r.commit_number.c_str())+1;
+    int currentCursorPosition = 0;
+    while(getline(ifs, current_line)){
+        for(int i = 0; current_line[i] != 0; i++){
+            if(current_line[i] == '=' && current_line.substr(0,i) == "commit_number"){
+                ifs.seekg(0, std::ios::beg);
+                std::string file_data((std::istreambuf_iterator<char>(ifs)),
+                    std::istreambuf_iterator<char>());
+                /* work on data */
+                std::string start = file_data.substr(0, currentCursorPosition+1);
+                std::string end = file_data.substr(currentCursorPosition+current_line.length()-i);
+            
+                file_data = start + to_string(new_commit_number);
+            
+                ifs.close();
+            
+                std::ofstream ofs;
+                ofs.open((this->r.directory+ "/.mome").c_str(), std::ios::trunc);
+                ofs << file_data;
+
+                break;
+            }
+            currentCursorPosition++;
+        }
+        currentCursorPosition++;
+    }
 }

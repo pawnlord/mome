@@ -16,7 +16,7 @@ typedef struct {
     bool active;
     std::string date_created;
     std::string directory;
-
+    std::string commit_number;
 } repoInfo;
 
 class Repo {
@@ -25,6 +25,7 @@ class Repo {
         repoInfo getInfo();
         std::string formatInfo(std::string format);
         repoInfo setInfo();
+        void addCommit(char** args);
     private:
         repoInfo r;
 };

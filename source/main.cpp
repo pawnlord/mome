@@ -35,6 +35,9 @@ command getCommand(char** args){
     } else if(strcmp(args[1], "commandline") == 0 || strcmp(args[1], "cli") == 0) {
         // enter CLI mode
         return CLI;
+    } else if(strcmp(args[1], "commit") == 0 || strcmp(args[1], "c") == 0) {
+        // commit to current Repo
+        return COMMIT;
     }
     // something went wrong
     return NOT_A_COMMAND;
@@ -65,6 +68,9 @@ command getCliCommand(std::string args[]){
     } else if(args[0].compare("init") == 0) {
         // initialize a repo
         return INIT;
+    } else if(args[0].compare("commit") == 0 || args[0].compare("c") == 0) {
+        // commit to current Repo
+        return COMMIT;
     }
     // something went wrong
     return NOT_A_COMMAND;
@@ -117,10 +123,18 @@ int main(int argc, char** args){
                     std::cout << r.formatInfo("") << std::endl;
                 } else if(c == INIT) {
                     Repo r(true);
+                } else if(c == COMMIT) {
+                    Repo r;
+                    r.addCommit(args+2);
+                    std::cout << "Added Commit" << std::endl;
                 } else if(c == NOT_A_COMMAND && input != "exit") {
                     std::cout << "Invalid Arguements: " << args << std::endl;
                 }
             }
+        } else if(c == COMMIT) {
+            Repo r;
+            r.addCommit(args+2);
+            std::cout << "Added Commit" << std::endl;
         } else if(c == NOT_A_COMMAND) {
             std::cout << "Invalid Arguements: " << args << std::endl;
         }
