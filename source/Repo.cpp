@@ -10,8 +10,10 @@
 #include <string>
 
 #include <ctime>
-
 #include <sstream>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 /* MinGW dumb, need to declare this myself */
 std::string to_string(int i){
@@ -71,6 +73,56 @@ std::string get_current_dir() {
    return current_working_dir;
 }
 
+std::string cleanName(std::string name) {
+    std::string new_string = "";
+    for(int i = 0; i < name.length(); i++){
+        if(name[i] != '\\' && name[i] != '/')
+            new_string+=name[i];
+    }
+    return new_string;
+}
+
+/* store all files in current directory */
+bool storeFiles(std::string destination, std::string from, std::string level=" |"){
+    std::string path = from;
+    for (const auto & entry : fs::directory_iterator(path)){
+        std::cout << level << entry.path()  << std::endl;
+        std::string name = cleanName(entry.path().string().substr(from.length()));
+        std::cout << name << std::endl;
+        if(fs::is_directory(entry.path())){
+            if(entry.path().string().find(".git") == std::string::npos &&
+                    entry.path().string().find(".mome") == std::string::npos){
+                if(mkdir((destination+"/"+name).c_str()) != 0){
+                    perror("mome commit: failed to make file");
+                    std::cerr << "failed to make file " << destination+"/name" << std::endl;
+                }
+                std::cout << "file_stored" << std::endl;
+                storeFiles(destination + "/" + name, entry.path().string(), level+" |");
+            }
+        } else {
+            if(entry.path().string().find(".git") == std::string::npos &&
+                entry.path().string().find(".mome") == std::string::npos){
+                std::ifstream ifs;
+                ifs.open(entry.path().string().c_str());
+                ifs.seekg(0, std::ios::beg);
+                std::string file_data((std::istreambuf_iterator<char>(ifs)),
+                    std::istreambuf_iterator<char>());
+                std::cout << file_data << std::endl;
+                std::ofstream ofs;
+                std::cout << "file_stored" << std::endl;
+                ofs.open(destination+"/"+name, std::ios::trunc);
+                /* TODO: Make more than just file data*/
+                ofs << file_data << std::endl;
+                ofs.close();
+                ifs.close();
+            }
+
+        }
+    }
+    return 1;
+}
+
+
 Repo::Repo(bool create){
     if(!create) {
         /* get current directory, to be used to find .mome file */
@@ -90,7 +142,7 @@ Repo::Repo(bool create){
             /* current_line is the line we are reading */
             std::string current_line;    
             /* store the directory we found */
-            this->r.directory = repoDir.substr(0, repoDir.length() - std::string("/.mome").length());
+            this->r.directory = repoDir.substr(0, repoDir.length());
             this->r.date_created = "no_date_yet";
             
             /* loop through lines and store the data */
@@ -152,6 +204,10 @@ void Repo::addCommit(char** args){
     /* read mome file */
     std::ifstream ifs;
     ifs.open((this->r.directory+ "/.mome").c_str());
+    if(ifs.fail()){
+        std::cerr << "Failed to open " << this->r.directory+ "/.mome" << std::endl;
+        perror("error");
+    }
     std::string current_line;    
     
     /* find how many commits we need*/
@@ -182,6 +238,13 @@ void Repo::addCommit(char** args){
                 ofs << file_data;
                 ofs.close();
 
+                /* open file for new commit */
+                if(!mkdir((".mome/commit" + to_string(new_commit_number)).c_str())){
+                    /* function that stores all files in the current directory in the given directory*/
+                    std::string cwd = get_current_dir();
+                    std::string from = this->r.directory.substr(0, this->r.directory.length() - std::string(".mome").length());
+                    storeFiles(".mome/commit" + to_string(new_commit_number), from);
+                }
                 break;
             }
             current_cursor_position++;
