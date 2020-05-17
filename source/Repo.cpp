@@ -20,6 +20,7 @@ std::string to_string(int i){
     return ss.str();
 }
 
+/* check if a directory exists */
 bool checkDir( std::string name )
 {
 #ifdef OS_WINDOWS
@@ -44,6 +45,7 @@ std::string getLastDir(std::string path){
     return path;
 }
 
+/* check for a directory in every dir in <path> */
 std::string recursiveCheckDir(std::string name, std::string path ){
     if(checkDir(path+"/"+name)){
         return path+"/"+name;
@@ -60,6 +62,7 @@ std::string recursiveCheckDir(std::string name, std::string path ){
     return "";
 }
 
+/* get cwd */
 std::string get_current_dir() {
    char* buff = (char*) malloc(FILENAME_MAX); //create string buffer to hold path
    GetCurrentDir(buff, FILENAME_MAX);
@@ -70,20 +73,27 @@ std::string get_current_dir() {
 
 Repo::Repo(bool create){
     if(!create) {
+        /* get current directory, to be used to find .mome file */
         std::string cwd = get_current_dir();
         
         std::string repoDir = "";
+        /* try to find .mome file, if we fail set active to false */
         if ((repoDir = recursiveCheckDir(".mome", cwd)) == "") {
             this->r.active = false;
             this->r.date_created = ""; 
         } else {
+            /* found one, set active to true and open .mome/.mome */
             this->r.active = true;
             std::ifstream ifs;
             ifs.open((repoDir + "/.mome").c_str());
+
+            /* current_line is the line we are reading */
             std::string current_line;    
+            /* store the directory we found */
             this->r.directory = repoDir.substr(0, repoDir.length() - std::string("/.mome").length());
             this->r.date_created = "no_date_yet";
             
+            /* loop through lines and store the data */
             while(getline(ifs, current_line)){
                 for(int i = 0; current_line[i] != 0; i++){
                     if(current_line[i] == '=' && current_line.substr(0,i) == "date_created"){
@@ -97,6 +107,9 @@ Repo::Repo(bool create){
             }
         }
     } else {
+        /* TODO: make sure this works even if the directory already exists */
+
+        /* make the directory */
         if(mkdir(".mome") != 0){
             
             std::cout << "Error making .mome directory, aborting init" << std::endl;
@@ -121,45 +134,58 @@ std::string Repo::formatInfo(std::string format){
     * format specifiers:
     * @: active
     * #: date
+    * TODO: needs to be implemented
     */
     std::string formatted;
+    /* if we didn't find an active one, stop here*/
     if(!this->r.active) {
         formatted = "No active repo";
     } else {
+        /* tell us location, date created, and commits */
         formatted = "Active Repo found (" + this->r.directory + ").\nCreated " + this->r.date_created + 
                     ", with " + this->r.commit_number + " commits"; 
     }
     return formatted;
 }
+
 void Repo::addCommit(char** args){
+    /* read mome file */
     std::ifstream ifs;
     ifs.open((this->r.directory+ "/.mome").c_str());
     std::string current_line;    
     
+    /* find how many commits we need*/
     int new_commit_number = atoi(this->r.commit_number.c_str())+1;
-    int currentCursorPosition = 0;
+
+    /* overall position in file */
+    int current_cursor_position = 0;
+    /* loop through lines */
     while(getline(ifs, current_line)){
+        /* loop through characters in line*/
         for(int i = 0; current_line[i] != 0; i++){
             if(current_line[i] == '=' && current_line.substr(0,i) == "commit_number"){
                 ifs.seekg(0, std::ios::beg);
                 std::string file_data((std::istreambuf_iterator<char>(ifs)),
                     std::istreambuf_iterator<char>());
                 /* work on data */
-                std::string start = file_data.substr(0, currentCursorPosition+1);
-                std::string end = file_data.substr(currentCursorPosition+current_line.length()-i);
+                std::string start = file_data.substr(0, current_cursor_position+1);
+                std::string end = file_data.substr(current_cursor_position+current_line.length()-i);
             
-                file_data = start + to_string(new_commit_number);
-            
+                /* change number */
+                file_data = start + to_string(new_commit_number) + end;
+                /* close file */
                 ifs.close();
-            
+
+                /* store new data */
                 std::ofstream ofs;
                 ofs.open((this->r.directory+ "/.mome").c_str(), std::ios::trunc);
                 ofs << file_data;
+                ofs.close();
 
                 break;
             }
-            currentCursorPosition++;
+            current_cursor_position++;
         }
-        currentCursorPosition++;
+        current_cursor_position++;
     }
 }
