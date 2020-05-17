@@ -125,16 +125,20 @@ int main(int argc, char** args){
                     Repo r(true);
                 } else if(c == COMMIT) {
                     Repo r;
-                    r.addCommit(args+2);
-                    std::cout << "Added Commit" << std::endl;
+                    int ret;
+                    if((ret = r.addCommit(args+2))) {
+                        std::cout << "Added Commit number " << ret << std::endl;
+                    }
                 } else if(c == NOT_A_COMMAND && input != "exit") {
                     std::cout << "Invalid Arguements: " << args << std::endl;
                 }
             }
         } else if(c == COMMIT) {
             Repo r;
-            r.addCommit(args+2);
-            std::cout << "Added Commit" << std::endl;
+                int ret;
+            if((ret = r.addCommit(args+2))) {
+                std::cout << "Added Commit number " << ret << std::endl;
+            }
         } else if(c == NOT_A_COMMAND) {
             std::cout << "Invalid Arguements: " << args << std::endl;
         }

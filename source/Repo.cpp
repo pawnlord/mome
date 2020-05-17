@@ -83,34 +83,38 @@ std::string cleanName(std::string name) {
 }
 
 /* store all files in current directory */
-bool storeFiles(std::string destination, std::string from, std::string level=" |"){
+bool storeFiles(std::string destination, std::string from){
     std::string path = from;
     for (const auto & entry : fs::directory_iterator(path)){
-        std::cout << level << entry.path()  << std::endl;
         std::string name = cleanName(entry.path().string().substr(from.length()));
-        std::cout << name << std::endl;
         if(fs::is_directory(entry.path())){
             if(entry.path().string().find(".git") == std::string::npos &&
                     entry.path().string().find(".mome") == std::string::npos){
                 if(mkdir((destination+"/"+name).c_str()) != 0){
                     perror("mome commit: failed to make file");
-                    std::cerr << "failed to make file " << destination+"/name" << std::endl;
+                    std::cerr << "failed to make file " << destination+"/"+name << std::endl;
+                    return 0;
                 }
-                std::cout << "file_stored" << std::endl;
-                storeFiles(destination + "/" + name, entry.path().string(), level+" |");
+                if(!storeFiles(destination + "/" + name, entry.path().string())){
+                    return 0;
+                };
             }
         } else {
             if(entry.path().string().find(".git") == std::string::npos &&
                 entry.path().string().find(".mome") == std::string::npos){
                 std::ifstream ifs;
-                ifs.open(entry.path().string().c_str());
+                ifs.open(entry.path().string().c_str(), std::ios::binary);
+                if(ifs.fail()){
+                    return 0;
+                }
                 ifs.seekg(0, std::ios::beg);
                 std::string file_data((std::istreambuf_iterator<char>(ifs)),
                     std::istreambuf_iterator<char>());
-                std::cout << file_data << std::endl;
                 std::ofstream ofs;
-                std::cout << "file_stored" << std::endl;
-                ofs.open(destination+"/"+name, std::ios::trunc);
+                ofs.open(destination+"/"+name, std::ios::trunc | std::ios::binary);
+                if(ofs.fail()){
+                    return 0;
+                }
                 /* TODO: Make more than just file data*/
                 ofs << file_data << std::endl;
                 ofs.close();
@@ -200,13 +204,14 @@ std::string Repo::formatInfo(std::string format){
     return formatted;
 }
 
-void Repo::addCommit(char** args){
+int Repo::addCommit(char** args){
     /* read mome file */
     std::ifstream ifs;
     ifs.open((this->r.directory+ "/.mome").c_str());
     if(ifs.fail()){
-        std::cerr << "Failed to open " << this->r.directory+ "/.mome" << std::endl;
+        std::cerr << "Failed to open " << this->r.directory << "/.mome" << std::endl;
         perror("error");
+        return 0;
     }
     std::string current_line;    
     
@@ -239,11 +244,14 @@ void Repo::addCommit(char** args){
                 ofs.close();
 
                 /* open file for new commit */
-                if(!mkdir((".mome/commit" + to_string(new_commit_number)).c_str())){
+                if(!mkdir((this->r.directory+"/commit" + to_string(new_commit_number)).c_str())){
                     /* function that stores all files in the current directory in the given directory*/
                     std::string cwd = get_current_dir();
                     std::string from = this->r.directory.substr(0, this->r.directory.length() - std::string(".mome").length());
-                    storeFiles(".mome/commit" + to_string(new_commit_number), from);
+                    return storeFiles(this->r.directory+"/commit" + to_string(new_commit_number), from ) * new_commit_number;
+                } else {
+                    perror("failed to commit");
+                    return 0;
                 }
                 break;
             }
@@ -251,4 +259,5 @@ void Repo::addCommit(char** args){
         }
         current_cursor_position++;
     }
+    return 0;
 }
