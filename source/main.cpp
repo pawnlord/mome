@@ -147,7 +147,9 @@ int main(int argc, char** args){
             }
         } else if(c ==LOG) {
             Repo r;
-             r.logCommits();
+            if(!r.logCommits()){
+                std::cout << "No Active Repo Found" << std::endl; 
+            }
             //std::cout << r.logCommits() << std::endl;
                 
         } else if(c == NOT_A_COMMAND) {

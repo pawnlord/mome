@@ -270,15 +270,20 @@ int Repo::addCommit(int argc, char** args){
     return 0;
 }
 
-std::string Repo::logCommits() {
+int Repo::logCommits() {
     std::string output = "";
     int totalCommits = atoi(this->r.commit_number.c_str());
+    if(this->r.active == false){
+        return 0;
+    }
     std::string commitDir = this->r.directory+"/commit";
     for(int i = totalCommits; i >= 1; i--){
         std::ifstream ifs;
         ifs.open((commitDir+to_string(i)+"/commit_info.cinfo").c_str());
         if(!ifs.fail()){
+            std::cout << "----------------" << std::endl;
             std::cout << "commit#"+to_string(i) << std::endl;
+            std::cout << "----------------" << std::endl;
             ifs.seekg(0, std::ios::beg);
             std::string file_data((std::istreambuf_iterator<char>(ifs)),
                 std::istreambuf_iterator<char>());
