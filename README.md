@@ -1,14 +1,13 @@
 # mome
-A portable, simple version control system  
-version 0.1.0  
+A portable, simple Version Control System, version 0.1.0  
 
 ## the name  
-For those confused, a mome is an archaic term for idiot  
+For those confused, a mome is an archaic term for idiot.  
 
 ## building
 To build, use this command: 
 ```
-g++ source/*.cpp -o mome
+g++ source/*.cpp -o mome -std=c++17
 ```
 
 ## usage  

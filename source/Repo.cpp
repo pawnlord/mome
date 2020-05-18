@@ -204,7 +204,7 @@ std::string Repo::formatInfo(std::string format){
     return formatted;
 }
 
-int Repo::addCommit(char** args){
+int Repo::addCommit(int argc, char** args){
     /* read mome file */
     std::ifstream ifs;
     ifs.open((this->r.directory+ "/.mome").c_str());
@@ -247,7 +247,15 @@ int Repo::addCommit(char** args){
                 if(!mkdir((this->r.directory+"/commit" + to_string(new_commit_number)).c_str())){
                     /* function that stores all files in the current directory in the given directory*/
                     std::string cwd = get_current_dir();
+                    std::ofstream ofs;
+                    ofs.open(this->r.directory+"/commit" + to_string(new_commit_number) + "/commit_info.cinfo");
+                    std::time_t result = std::time(NULL);
+                    ofs << "date_created=" << std::asctime(std::localtime(&result));
+                    if(argc > 2){
+                        ofs << "info=" << args[0] << std::endl;    
+                    }
                     std::string from = this->r.directory.substr(0, this->r.directory.length() - std::string(".mome").length());
+                    
                     return storeFiles(this->r.directory+"/commit" + to_string(new_commit_number), from ) * new_commit_number;
                 } else {
                     perror("failed to commit");
@@ -260,4 +268,21 @@ int Repo::addCommit(char** args){
         current_cursor_position++;
     }
     return 0;
+}
+
+std::string Repo::logCommits() {
+    std::string output = "";
+    int totalCommits = atoi(this->r.commit_number.c_str());
+    std::string commitDir = this->r.directory+"/commit";
+    for(int i = totalCommits; i >= 1; i--){
+        std::ifstream ifs;
+        ifs.open((commitDir+to_string(i)+"/commit_info.cinfo").c_str());
+        if(!ifs.fail()){
+            std::cout << "commit#"+to_string(i) << std::endl;
+            ifs.seekg(0, std::ios::beg);
+            std::string file_data((std::istreambuf_iterator<char>(ifs)),
+                std::istreambuf_iterator<char>());
+            std::cout << file_data << std::endl;
+        }
+    }
 }

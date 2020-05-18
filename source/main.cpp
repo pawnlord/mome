@@ -38,6 +38,9 @@ command getCommand(char** args){
     } else if(strcmp(args[1], "commit") == 0 || strcmp(args[1], "c") == 0) {
         // commit to current Repo
         return COMMIT;
+    } else if(strcmp(args[1], "log") == 0 || strcmp(args[1], "l") == 0) {
+        // commit to current Repo
+        return LOG;
     }
     // something went wrong
     return NOT_A_COMMAND;
@@ -71,6 +74,9 @@ command getCliCommand(std::string args[]){
     } else if(args[0].compare("commit") == 0 || args[0].compare("c") == 0) {
         // commit to current Repo
         return COMMIT;
+    }else if(args[0].compare("log") == 0 || args[0].compare("l") == 0) {
+        // log all commits
+        return LOG;
     }
     // something went wrong
     return NOT_A_COMMAND;
@@ -126,7 +132,7 @@ int main(int argc, char** args){
                 } else if(c == COMMIT) {
                     Repo r;
                     int ret;
-                    if((ret = r.addCommit(args+2))) {
+                    if((ret = r.addCommit(argc, args+2))) {
                         std::cout << "Added Commit number " << ret << std::endl;
                     }
                 } else if(c == NOT_A_COMMAND && input != "exit") {
@@ -135,10 +141,15 @@ int main(int argc, char** args){
             }
         } else if(c == COMMIT) {
             Repo r;
-                int ret;
-            if((ret = r.addCommit(args+2))) {
+            int ret;
+            if((ret = r.addCommit(argc, args+2))) {
                 std::cout << "Added Commit number " << ret << std::endl;
             }
+        } else if(c ==LOG) {
+            Repo r;
+             r.logCommits();
+            //std::cout << r.logCommits() << std::endl;
+                
         } else if(c == NOT_A_COMMAND) {
             std::cout << "Invalid Arguements: " << args << std::endl;
         }

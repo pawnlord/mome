@@ -25,7 +25,8 @@ class Repo {
         repoInfo getInfo();
         std::string formatInfo(std::string format);
         repoInfo setInfo();
-        int addCommit(char** args);
+        int addCommit(int argc, char** args);
+        std::string logCommits();
     private:
         repoInfo r;
 };
