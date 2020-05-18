@@ -7,7 +7,7 @@ For those confused, a mome is an archaic term for idiot.
 ## building
 To build, use this command: 
 ```
-g++ source/*.cpp -o mome -std=c++18
+g++ source/*.cpp -o mome -std=c++17
 ```
 
 ## usage  
@@ -27,11 +27,11 @@ commands:
 - **commandline/cli:** start a commandline interface for continuous usage.
 
 ## TODO  
+- config: a configuration file to store user info.
 - cli has basic shell usage.  
 - add more information to log.
 - make log easier to read when you have manny commits.
 - multi-line commit messages
-- config: a configuration file to store user info.
 - revert: revert to a specific commit.
 - diff: ability to diff files.
 - branch and merge

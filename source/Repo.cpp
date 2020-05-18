@@ -47,7 +47,7 @@ std::string getLastDir(std::string path){
     return path;
 }
 
-/* check for a directory in every dir in <path> */
+/* check for a directory <name> in every dir in <path> */
 std::string recursiveCheckDir(std::string name, std::string path ){
     if(checkDir(path+"/"+name)){
         return path+"/"+name;
@@ -73,9 +73,11 @@ std::string get_current_dir() {
    return current_working_dir;
 }
 
+/* clean a name so that it doesn't mess with any functions */
 std::string cleanName(std::string name) {
     std::string new_string = "";
     for(int i = 0; i < name.length(); i++){
+        /* if it has a slash, it could be interpreted as from the root directory */
         if(name[i] != '\\' && name[i] != '/')
             new_string+=name[i];
     }
@@ -85,38 +87,56 @@ std::string cleanName(std::string name) {
 /* store all files in current directory */
 bool storeFiles(std::string destination, std::string from){
     std::string path = from;
+    /* loop through every directory in <path> */
     for (const auto & entry : fs::directory_iterator(path)){
+        /* get the name of the path */
         std::string name = cleanName(entry.path().string().substr(from.length()));
+        /* if it's a directory, make a new directory in the commit folder, 
+         * and recursively store everything in that folder 
+         */
         if(fs::is_directory(entry.path())){
+            /* don't do this for mome files (or git files, because that would be pointless) */
             if(entry.path().string().find(".git") == std::string::npos &&
                     entry.path().string().find(".mome") == std::string::npos){
                 if(mkdir((destination+"/"+name).c_str()) != 0){
+                    /* something went wrong, log it */
                     perror("mome commit: failed to make file");
                     std::cerr << "failed to make file " << destination+"/"+name << std::endl;
                     return 0;
                 }
                 if(!storeFiles(destination + "/" + name, entry.path().string())){
+                    /* pass failure through if one happened */
                     return 0;
                 };
             }
         } else {
+            /* If it is a file, store it in <destination>
+             * unless it is .git or .mome
+             */
             if(entry.path().string().find(".git") == std::string::npos &&
                 entry.path().string().find(".mome") == std::string::npos){
+                
                 std::ifstream ifs;
+                /* opening up the file to read */
                 ifs.open(entry.path().string().c_str(), std::ios::binary);
                 if(ifs.fail()){
                     return 0;
                 }
+                /* read the data */
                 ifs.seekg(0, std::ios::beg);
                 std::string file_data((std::istreambuf_iterator<char>(ifs)),
                     std::istreambuf_iterator<char>());
+                
                 std::ofstream ofs;
+                /* file to store it in */
                 ofs.open(destination+"/"+name, std::ios::trunc | std::ios::binary);
                 if(ofs.fail()){
                     return 0;
                 }
                 /* TODO: Make more than just file data*/
+                /* store file_data*/
                 ofs << file_data << std::endl;
+                /* close files */
                 ofs.close();
                 ifs.close();
             }
@@ -128,6 +148,7 @@ bool storeFiles(std::string destination, std::string from){
 
 
 Repo::Repo(bool create){
+    /* create tells us if we want to create the repository or not */
     if(!create) {
         /* get current directory, to be used to find .mome file */
         std::string cwd = get_current_dir();
@@ -152,6 +173,7 @@ Repo::Repo(bool create){
             /* loop through lines and store the data */
             while(getline(ifs, current_line)){
                 for(int i = 0; current_line[i] != 0; i++){
+                    /* read date created and commit number*/
                     if(current_line[i] == '=' && current_line.substr(0,i) == "date_created"){
                         this->r.date_created = std::string(current_line.c_str()+i+1);
                         break;
@@ -174,16 +196,21 @@ Repo::Repo(bool create){
         std::ofstream file;
         file.open(".mome/.mome");
         
+        /* store date created */
         std::time_t result = std::time(NULL);
         file << "date_created=" << std::asctime(std::localtime(&result)) << std::endl;
+        /* initialize commit_number */
         file << "commit_number=0"<< std::endl;
         
         file.close();
     }
 }
+/* get repoInfo */
 repoInfo Repo::getInfo(){
     return this->r;
 }
+
+/* format repoInfo */
 std::string Repo::formatInfo(std::string format){
     /**
     * Get info in specified format.
@@ -204,9 +231,11 @@ std::string Repo::formatInfo(std::string format){
     return formatted;
 }
 
+/* add a commit to repo */
 int Repo::addCommit(int argc, char** args){
     /* read mome file */
     std::ifstream ifs;
+    /* open the .mome (information) file */
     ifs.open((this->r.directory+ "/.mome").c_str());
     if(ifs.fail()){
         std::cerr << "Failed to open " << this->r.directory << "/.mome" << std::endl;
@@ -248,6 +277,8 @@ int Repo::addCommit(int argc, char** args){
                     /* function that stores all files in the current directory in the given directory*/
                     std::string cwd = get_current_dir();
                     std::ofstream ofs;
+                   
+                    /* make a commit info file, store date and info (if available) */
                     ofs.open(this->r.directory+"/commit" + to_string(new_commit_number) + "/commit_info.cinfo");
                     std::time_t result = std::time(NULL);
                     ofs << "date_created=" << std::asctime(std::localtime(&result));
@@ -256,8 +287,11 @@ int Repo::addCommit(int argc, char** args){
                     }
                     std::string from = this->r.directory.substr(0, this->r.directory.length() - std::string(".mome").length());
                     
+                    /* actually store commit info */
                     return storeFiles(this->r.directory+"/commit" + to_string(new_commit_number), from ) * new_commit_number;
                 } else {
+                    /* failed to make dir, probably already there */
+                    /* log error */
                     perror("failed to commit");
                     return 0;
                 }
@@ -270,23 +304,36 @@ int Repo::addCommit(int argc, char** args){
     return 0;
 }
 
+/* output data 
+ * return: success */
 int Repo::logCommits() {
-    std::string output = "";
-    int totalCommits = atoi(this->r.commit_number.c_str());
+    /* return if no active repo is found*/
     if(this->r.active == false){
         return 0;
     }
+    /* get commit number */
+    int totalCommits = atoi(this->r.commit_number.c_str());
+    
+    /* general form of a commit directory */
     std::string commitDir = this->r.directory+"/commit";
+
+    /* loop through commits, from most recent to least recent*/
     for(int i = totalCommits; i >= 1; i--){
         std::ifstream ifs;
+        /* open info file */
         ifs.open((commitDir+to_string(i)+"/commit_info.cinfo").c_str());
+
         if(!ifs.fail()){
+            /* print commit number we are reading */
             std::cout << "----------------" << std::endl;
             std::cout << "commit#"+to_string(i) << std::endl;
             std::cout << "----------------" << std::endl;
+
+            /* read data and output it */
             ifs.seekg(0, std::ios::beg);
             std::string file_data((std::istreambuf_iterator<char>(ifs)),
                 std::istreambuf_iterator<char>());
+    
             std::cout << file_data << std::endl;
         }
     }
