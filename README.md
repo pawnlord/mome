@@ -1,5 +1,5 @@
 # mome
-A portable, simple Version Control System, version 0.1.0  
+A portable, simple Version Control System, version 0.2.0  
 
 ## the name  
 For those confused, a mome is an archaic term for idiot.  
@@ -18,8 +18,8 @@ commands:
 - **no command:** general information about mome.  
 - **help/h:** list all commands.  
 - **version/v:** tell version info.  
-- **init/i:** initialize a repository.  
-- **info:** info about current repository.
+- **init:** initialize a repository.  
+- **info/i:** info about current repository.
 - **commit/c:** commit current repository.
     - **format:** `mome commit [<message>]`
     - **message:** info you want attached to the commit (shown in log).
