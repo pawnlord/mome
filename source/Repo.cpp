@@ -231,6 +231,28 @@ std::string Repo::formatInfo(std::string format){
     return formatted;
 }
 
+std::string formatCommitData(std::string data) {
+    std::string line = "";
+    std::string formatted = "";
+    for(char c : data) {
+        if(c == '\n') {
+            for (int i = 0; i < line.length(); i++) {
+                if(line[i] == '='){
+                    if(line.substr(0, i) == "date_created") {
+                        formatted += "Created: " + line.substr(i+1) + "\n";
+                    } else if(line.substr(0, i) == "info") {
+                        formatted += "Message: " + line.substr(i+1) + "\n";
+                    }
+                }
+            }
+            line = "";
+        } else {
+            line += c;
+        }
+    }
+    return formatted;
+}
+
 /* add a commit to repo */
 int Repo::addCommit(int argc, char** args){
     /* read mome file */
@@ -333,8 +355,9 @@ int Repo::logCommits() {
             ifs.seekg(0, std::ios::beg);
             std::string file_data((std::istreambuf_iterator<char>(ifs)),
                 std::istreambuf_iterator<char>());
-    
-            std::cout << file_data << std::endl;
+                
+            std::cout << formatCommitData(file_data) << std::endl;    
         }
     }
+    return 1;
 }
