@@ -3,7 +3,7 @@
 #include <string.h>
 #include "../include/Repo.h"
 typedef enum  {
-    NOT_A_COMMAND = -1, NON_REPO_RELATED = 0, GET_INFO, LOG, COMMIT, INIT, CLI
+    NOT_A_COMMAND = -1, NON_REPO_RELATED = 0, GET_INFO, LOG, COMMIT, INIT, CLI, STATUS
 } command;
 
 command getCommand(char** args){
@@ -17,7 +17,7 @@ command getCommand(char** args){
 
         std::cout << " - info/i: get repo info.\n - init: initialize repo." << std::endl;
        
-        std::cout << " - commandline/cli: run a continuous command-line interface" << std::endl;
+        std::cout << " - commandline/cli: run a continuous command-line interface\n - status: get status (changes) in current repo." << std::endl;
 
         // tell the program it doesn't need to do more
         return NON_REPO_RELATED;

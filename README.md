@@ -27,11 +27,13 @@ commands:
 - **commandline/cli:** start a commandline interface for continuous usage.
 
 ## TODO  
+- status: status to see changes in current commit.
 - config: a configuration file to store user info.
-- cli has basic shell usage.  
-- add more information to log.
-- make log easier to read when you have manny commits.
 - multi-line commit messages
+- allow someone to specify the directory to commit.
+- add: add something to list of things to commit.
 - revert: revert to a specific commit.
+- add more information to log.
+- make log easier to read when you have many commits.
 - diff: ability to diff files.
 - branch and merge
