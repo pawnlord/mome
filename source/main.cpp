@@ -6,19 +6,47 @@ typedef enum  {
     NOT_A_COMMAND = -1, NON_REPO_RELATED = 0, GET_INFO, LOG, COMMIT, INIT, CLI, STATUS
 } command;
 
-command getCommand(char** args){
+command getCommand(int argc, char** args){
     if(strcmp(args[1], "help") == 0 || strcmp(args[1], "h") == 0) {
-        // information on commands
-       std::cout << "Mome is a git clone kinda deal. Current commands are: " << std::endl;
-     
-        std::cout << " - help/h: get help.\n - version/v: get version." << std::endl;
-     
-        std::cout << " - log/l: get log of current repo.\n - commit/c: add current state to the repos state" << std::endl;
+        if(argc == 2) {
+            // information on commands
+            std::cout << "Mome is a git clone kinda deal. Current commands are: " << std::endl;
+        
+            std::cout << " - help/h: get help (general or specific).\n - version/v: get version." << std::endl;
+        
+            std::cout << " - log/l: get log of current repo.\n - commit/c: add current state to the repos state" << std::endl;
 
-        std::cout << " - info/i: get repo info.\n - init: initialize repo." << std::endl;
-       
-        std::cout << " - commandline/cli: run a continuous command-line interface\n - status: get status (changes) in current repo." << std::endl;
+            std::cout << " - info/i: get repo info.\n - init: initialize repo." << std::endl;
+        
+            std::cout << " - commandline/cli: run a continuous command-line interface\n - status: get status (changes) in current repo." << std::endl;
+        } else {
+            char* commandToCheck = args[2];
+            if(strcmp(commandToCheck, "help") == 0 || strcmp(commandToCheck, "h") == 0) {
+                std::cout << "Get general help or specific help on commands" << std::endl;
+                std::cout << " - possible forms: help, h" << std::endl;
+                std::cout << " - syntax: help [<command>]" << std::endl;
+            } else if(strcmp(commandToCheck, "version") == 0 || strcmp(commandToCheck, "v") == 0) {
+                std::cout << "Get version of Mome" << std::endl;
+                std::cout << " - possible forms: version, v" << std::endl;
+            } else if(strcmp(commandToCheck, "info") == 0 || strcmp(commandToCheck, "i") == 0) {
+                std::cout << "Get info of current Repo (closest in tree)." << std::endl;
+                std::cout << " - possible forms: info, i" << std::endl;
+            } else if(strcmp(commandToCheck, "init") == 0) {
+                std::cout << "Start a new repository." << std::endl;
+                std::cout << " - possible forms: init" << std::endl;
+            } else if(strcmp(commandToCheck, "commandline") == 0 || strcmp(commandToCheck, "cli") == 0) {
+            } else if(strcmp(commandToCheck, "commit") == 0 || strcmp(commandToCheck, "c") == 0) {
+                std::cout << "Commit and store all data in the current repo." << std::endl;
+                std::cout << " - possible forms: commit, c" << std::endl;
+                std::cout << " - syntax: commit [<message>]" << std::endl;
+            } else if(strcmp(commandToCheck, "log") == 0 || strcmp(commandToCheck, "l") == 0) {
+                std::cout << "Log all commits in current repo" << std::endl;
+                std::cout << " - possible forms: log, l" << std::endl;
+            } else {
+                std::cout << "Not a command" << std::endl;
 
+            }
+        }
         // tell the program it doesn't need to do more
         return NON_REPO_RELATED;
     } else if(strcmp(args[1], "version") == 0 || strcmp(args[1], "v") == 0) {
@@ -74,7 +102,7 @@ command getCliCommand(std::string args[]){
     } else if(args[0].compare("commit") == 0 || args[0].compare("c") == 0) {
         // commit to current Repo
         return COMMIT;
-    }else if(args[0].compare("log") == 0 || args[0].compare("l") == 0) {
+    } else if(args[0].compare("log") == 0 || args[0].compare("l") == 0) {
         // log all commits
         return LOG;
     }
@@ -85,8 +113,9 @@ command getCliCommand(std::string args[]){
 int main(int argc, char** args){
     if(argc == 1) {
         std::cout << "Welcome to Mome! A version control system for momes.\nUse help or h for more info" << std::endl; 
+        std::cout << "for a specific command, use help <command>." << std::endl;
     } else {
-        command c = getCommand(args);
+        command c = getCommand(argc, args);
         if(c == GET_INFO) {
             Repo r;
         

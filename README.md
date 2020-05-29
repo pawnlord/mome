@@ -16,7 +16,9 @@ mome <command> [args]
 ```
 commands:
 - **no command:** general information about mome.  
-- **help/h:** list all commands.  
+- **help/h:** get help with mome.  
+    - **default:** list all commands.
+    - **`help <command>`:** get help for specific command.  
 - **version/v:** tell version info.  
 - **init:** initialize a repository.  
 - **info/i:** info about current repository.
